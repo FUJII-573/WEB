@@ -185,3 +185,16 @@ export default defineConfig({
     },
   },
 });
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import path from 'path'
+
+export default defineConfig({
+  base: '/WEB/', // เพิ่มบรรทัดนี้เพื่อให้ GitHub Pages หาไฟล์เจอ
+  plugins: [react()],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./"),
+    },
+  },
+})
