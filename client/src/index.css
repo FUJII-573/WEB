@@ -1,7 +1,16 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@custom-variant dark (&:is(.dark *));
+@layer base {
+  * {
+    border-color: var(--border, #e5e7eb);
+  }
+  body {
+    background-color: var(--background, #ffffff);
+    color: var(--foreground, #09090b);
+  }
+}
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
