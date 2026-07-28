@@ -91,12 +91,12 @@ export default function Home() {
   /* Menu Items Data */
   const menuData: MenuItem[] = [
     // CUSTOMS
-    { id: 101, category: "custom", name: { th: "Performance Parts" }, price: 10000, img: "https://img1.pic.in.th/images/Screenshot-2026-04-10-215327.png" },
-    { id: 104, category: "custom", name: { th: "Cosmetic Parts" }, price: 1000, img: "https://img1.pic.in.th/images/Screenshot-2026-04-06-215058.png" },
-    { id: 107, category: "custom", name: { th: "Respray Kit" }, price: 2000, img: "https://img2.pic.in.th/Screenshot-2026-04-06-214850.png" },
-    { id: 103, category: "custom", name: { th: "Vehicle Wheels Set" }, price: 2000, img: "https://img1.pic.in.th/images/Vehicle_Wheels.png" },
-    { id: 106, category: "custom", name: { th: "Extras_Kit" }, price: 1000, img: "https://img1.pic.in.th/images/Screenshot-2026-05-21-011419.png" },
-    { id: 102, category: "custom", name: { th: "Stancer Kit" }, price: 1000, img: "https://img1.pic.in.th/images/Stancer_Kit.png" },
+    { id: 101, category: "custom", name: { th: "Performance Parts" }, price: 10000, img: "https://media.discordapp.net/attachments/904634942091296788/1529228211165335682/image.png?ex=6a691541&is=6a67c3c1&hm=7d2544f17f77e1f01d90d4a5139565555b73273141e352d258538239eaf83660&=&format=webp&quality=lossless" },
+    { id: 104, category: "custom", name: { th: "Cosmetic Parts" }, price: 1000, img: "https://media.discordapp.net/attachments/904634942091296788/1529228211492225116/image.png?ex=6a691541&is=6a67c3c1&hm=bc5f38b64d1aef91a6b91e2d6411091c2706212a69f7930bc8623104b9d7e463&=&format=webp&quality=lossless" },
+    { id: 107, category: "custom", name: { th: "Respray Kit" }, price: 2000, img: "https://media.discordapp.net/attachments/904634942091296788/1529228211874037980/image.png?ex=6a691541&is=6a67c3c1&hm=2d4cfec5abd63ffd86ef380255a21178eda625cd21e18ea9e81406b1c541d33b&=&format=webp&quality=lossless" },
+    { id: 103, category: "custom", name: { th: "Vehicle Wheels Set" }, price: 2000, img: "https://media.discordapp.net/attachments/904634942091296788/1529228212201062440/image.png?ex=6a691541&is=6a67c3c1&hm=a081a2bed158e9524afee2cef26c376d0d658b5fd576536d82307742e5dd0672&=&format=webp&quality=lossless" },
+    { id: 106, category: "custom", name: { th: "Extras_Kit" }, price: 1000, img: "https://media.discordapp.net/attachments/904634942091296788/1529228212549324840/image.png?ex=6a691541&is=6a67c3c1&hm=835cc8ec52f1fda6835d0a134c4c6449bbe4616dd11ac033d2f13ed249028822&=&format=webp&quality=lossless" },
+    { id: 102, category: "custom", name: { th: "Stancer Kit" }, price: 1000, img: "https://media.discordapp.net/attachments/904634942091296788/1529236474464043128/image.png?ex=6a691cf3&is=6a67cb73&hm=a5bea597396ba89018cb0bcead7969bacb2c7d67aeba5d93f8dcf773fc6215d3&=&format=webp&quality=lossless" },
     { id: 108, category: "custom", name: { th: "Carplay" }, price: 2000, img: "https://img1.pic.in.th/images/Screenshot-2026-04-12-041049.png" },
 
     // Core Parts
