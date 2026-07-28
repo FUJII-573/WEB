@@ -5,9 +5,13 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  root: './client', // 👈 ชี้ root ไปที่ client
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './client/src'),
+    },
+  },
   build: {
-    outDir: '../dist', // 👈 ให้ build ออกไปที่โฟลเดอร์ dist ด้านนอก
+    outDir: 'dist',
     emptyOutDir: true,
   },
 });
