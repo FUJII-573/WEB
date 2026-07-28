@@ -1,56 +1,59 @@
-/*
-𝐕.𝐌.𝐎. 𝐋𝐔𝐂𝐊𝐘 𝐒𝐏𝐄𝐄𝐃 𝐂𝐔𝐒𝐓𝐎𝐌
-requisition system
-no login
-blue red theme
-*/
-
-type MenuItem = {
-  id: number;
-  category: string;
-  name: any;
-  price: number;
-  img: string;
-};
-
-// ฟังก์ชันเล่นเสียง
-const playClickSound = () => {
-  const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-  const oscillator = audioContext.createOscillator();
-  const gainNode = audioContext.createGain();
-  
-  oscillator.connect(gainNode);
-  gainNode.connect(audioContext.destination);
-  
-  oscillator.frequency.value = 800; // ความถี่เสียง
-  oscillator.type = 'sine';
-  
-  gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-  gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-  
-  oscillator.start(audioContext.currentTime);
-  oscillator.stop(audioContext.currentTime + 0.1);
-};
-
 import { useState, useEffect } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Moon, Sun, Settings } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useLocation } from "wouter";
 
-export default function Home() {
-  // The useAuth hook provides authentication state.
-  // To implement login/logout, call logout(), or start login from an event
-  // handler: onClick={() => startLogin()} (imported from "@/const"). Never call
-  // startLogin() during render (no href={startLogin()}) — it mints a one-time
-  // nonce cookie and must run only at the moment of navigation.
-  let { user, loading: authLoading, error, isAuthenticated, logout } = useAuth();
+// Types Definition
+type MenuItem = {
+  id: number;
+  category: string;
+  name: { th: string };
+  price: number;
+  img: string;
+};
 
+type CartItem = MenuItem & {
+  qty: number;
+};
+
+// Global AudioContext Instance
+let audioCtx: AudioContext | null = null;
+
+const playClickSound = () => {
+  try {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    if (audioCtx.state === "suspended") {
+      audioCtx.resume();
+    }
+    
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    
+    oscillator.frequency.value = 800;
+    oscillator.type = "sine";
+    
+    gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+    
+    oscillator.start(audioCtx.currentTime);
+    oscillator.stop(audioCtx.currentTime + 0.1);
+  } catch (e) {
+    console.error("Audio error:", e);
+  }
+};
+
+export default function Home() {
+  const { user } = useAuth();
   const { theme, toggleTheme, switchable } = useTheme();
   const [, setLocation] = useLocation();
-  
-  /* employee */
 
+  /* Employee List */
   const employees = [
     "Luther_Alexei_Morozov",
     "Jann_Burrell",
@@ -66,9 +69,65 @@ export default function Home() {
     "Edgar_Malone",
   ];
 
-  /* customer */
+  /* State Management */
+  const [employee, setEmployee] = useState("");
+  const [note, setNote] = useState("");
+  const [category, setCategory] = useState("custom");
+  const [search, setSearch] = useState("");
+  
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [stock, setStock] = useState<Record<number, number>>({
+    101: 10, 102: 99996, 103: 8, 104: 38, 105: 0, 106: 17, 107: 29, 108: 4,
+    201: 52, 202: 15, 203: 14, 204: 81, 205: 59, 206: 15, 207: 17, 208: 15, 209: 15,
+    301: 14, 302: 449, 303: 10, 304: 13, 305: 13, 306: 10, 307: 13, 308: 59, 309: 14, 310: 13, 311: 63, 312: 482, 313: 10,
+  });
+  
+  const [loading, setLoading] = useState(false);
+  const [popup, setPopup] = useState("");
+  const [sending, setSending] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  /* Menu Items Data */
+  const menuData: MenuItem[] = [
+    // CUSTOMS
+    { id: 101, category: "custom", name: { th: "Performance Parts" }, price: 10000, img: "https://img1.pic.in.th/images/Screenshot-2026-04-10-215327.png" },
+    { id: 104, category: "custom", name: { th: "Cosmetic Parts" }, price: 1000, img: "https://img1.pic.in.th/images/Screenshot-2026-04-06-215058.png" },
+    { id: 107, category: "custom", name: { th: "Respray Kit" }, price: 2000, img: "https://img2.pic.in.th/Screenshot-2026-04-06-214850.png" },
+    { id: 103, category: "custom", name: { th: "Vehicle Wheels Set" }, price: 2000, img: "https://img1.pic.in.th/images/Screenshot-2026-04-06-215128.png" },
+    { id: 106, category: "custom", name: { th: "Extras_Kit" }, price: 1000, img: "https://img1.pic.in.th/images/Screenshot-2026-05-21-011419.png" },
+    { id: 102, category: "custom", name: { th: "Stancer Kit" }, price: 1000, img: "https://img1.pic.in.th/images/Screenshot-2026-04-10-215441.png" },
+    { id: 108, category: "custom", name: { th: "Carplay" }, price: 2000, img: "https://img1.pic.in.th/images/Screenshot-2026-04-12-041049.png" },
+
+    // Core Parts
+    { id: 201, category: "Core Parts", name: { th: "Repair Kit" }, price: 300, img: "https://img2.pic.in.th/Screenshot-2026-04-06-212455.png" },
+    { id: 206, category: "Core Parts", name: { th: "Alternator" }, price: 600, img: "https://img2.pic.in.th/Screenshot-2026-04-06-212548.png" },
+    { id: 209, category: "Core Parts", name: { th: "Brakes" }, price: 600, img: "https://img2.pic.in.th/Screenshot-2026-04-06-212448.png" },
+    { id: 202, category: "Core Parts", name: { th: "Fuel Injector" }, price: 600, img: "https://img1.pic.in.th/images/Screenshot-2026-04-06-212409.png" },
+    { id: 203, category: "Core Parts", name: { th: "Power Steering Pump" }, price: 600, img: "https://img2.pic.in.th/Screenshot-2026-04-06-212341.png" },
+    { id: 207, category: "Core Parts", name: { th: "Radiator" }, price: 600, img: "https://img2.pic.in.th/Screenshot-2026-04-06-212523.png" },
+    { id: 208, category: "Core Parts", name: { th: "Transmission" }, price: 600, img: "https://img2.pic.in.th/Screenshot-2026-04-06-212507.png" },
+    { id: 205, category: "Core Parts", name: { th: "EV Battery" }, price: 600, img: "https://img2.pic.in.th/Screenshot-2026-04-06-212351.png" },
+    { id: 204, category: "Core Parts", name: { th: "Electric Motor" }, price: 600, img: "https://img1.pic.in.th/images/Screenshot-2026-04-06-212501.png" },
+
+    // Service
+    { id: 312, category: "Service", name: { th: "Air Filter" }, price: 400, img: "https://img1.pic.in.th/images/Screenshot-2026-04-06-212553.png" },
+    { id: 310, category: "Service", name: { th: "Brake Fluid" }, price: 400, img: "https://img2.pic.in.th/Screenshot-2026-04-06-212538.png" },
+    { id: 305, category: "Service", name: { th: "Brake Pads" }, price: 400, img: "https://img2.pic.in.th/Screenshot-2026-04-06-214628.png" },
+    { id: 309, category: "Service", name: { th: "Coolant" }, price: 400, img: "https://img2.pic.in.th/Screenshot-2026-04-06-214454.png" },
+    { id: 304, category: "Service", name: { th: "Drive Belt" }, price: 400, img: "https://img2.pic.in.th/Screenshot-2026-04-06-214705.png" },
+    { id: 303, category: "Service", name: { th: "Fuel Filter" }, price: 400, img: "https://img1.pic.in.th/images/Screenshot-2026-04-10-215321.png" },
+    { id: 302, category: "Service", name: { th: "Oil Filter" }, price: 400, img: "https://img2.pic.in.th/Screenshot-2026-04-06-212532.png" },
+    { id: 306, category: "Service", name: { th: "Steering Fluid" }, price: 400, img: "https://img2.pic.in.th/Screenshot-2026-04-06-212438.png" },
+    { id: 307, category: "Service", name: { th: "Spark Plugs" }, price: 400, img: "https://img1.pic.in.th/images/Screenshot-2026-04-06-214549.png" },
+    { id: 301, category: "Service", name: { th: "Tires" }, price: 400, img: "https://img1.pic.in.th/images/Screenshot-2026-04-06-214750.png" },
+    { id: 313, category: "Service", name: { th: "Transmission Fluid" }, price: 400, img: "https://img2.pic.in.th/Screenshot-2026-04-06-212558.png" },
+    { id: 311, category: "Service", name: { th: "Battery Coolant" }, price: 400, img: "https://img1.pic.in.th/images/Screenshot-2026-04-06-212515.png" },
+    { id: 308, category: "Service", name: { th: "High Voltage Wiring" }, price: 400, img: "https://img2.pic.in.th/Screenshot-2026-04-06-212429.png" },
+  ];
+
+  /* Fetch Stock */
   useEffect(() => {
-    // ดึงข้อมูลสต็อกจาก Google Sheets
     const fetchStock = async () => {
       try {
         setLoading(true);
@@ -77,16 +136,13 @@ export default function Home() {
         );
         const data = await response.json();
         
-        // ดึงข้อมูลสต็อก
-        const map: any = {};
+        const map: Record<number, number> = {};
         data.forEach((i: any) => {
           map[i.id] = i.qty;
         });
         setStock(map);
-
-
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching stock:", error);
       } finally {
         setLoading(false);
       }
@@ -95,295 +151,28 @@ export default function Home() {
     fetchStock();
   }, []);
 
-  const [employee, setEmployee] = useState("");
-
-  const [note, setNote] = useState("");
-
-  /* product */
-
-  const [category, setCategory] = useState("custom");
-
-  const [search, setSearch] = useState("");
-
-  /* cart */
-
-  const [cart, setCart] = useState<any[]>([]);
-  const [stock, setStock] = useState<any>({
-    101: 10, 102: 99996, 103: 8, 104: 38, 105: 0, 106: 17, 107: 29, 108: 4,
-    201: 52, 202: 15, 203: 14, 204: 81, 205: 59, 206: 15, 207: 17, 208: 15, 209: 15,
-    301: 14, 302: 449, 303: 10, 304: 13, 305: 13, 306: 10, 307: 13, 308: 59, 309: 14, 310: 13, 311: 63, 312: 482, 313: 10,
-  });
-  const [loading, setLoading] = useState(false);
-  
-
-
-  /* status */
-
-  const [popup, setPopup] = useState("");
-
-  const [sending, setSending] = useState(false);
-
-  const [submitted, setSubmitted] = useState(false);
-
-  const [showConfirm, setShowConfirm] = useState(false);
-
-  /* auto reset */
-
+  /* Auto Reset & Auto Hide Popup */
   useEffect(() => {
     if (!submitted) return;
-
     const t = setTimeout(() => {
       setSubmitted(false);
-
       setSending(false);
-
       setCart([]);
-
       setNote("");
-
       setEmployee("");
     }, 2000);
-
     return () => clearTimeout(t);
   }, [submitted]);
 
-  /* popup auto hide */
-
   useEffect(() => {
     if (!popup) return;
-
     const t = setTimeout(() => setPopup(""), 2000);
-
     return () => clearTimeout(t);
   }, [popup]);
 
-  /* menu */
-
-  const menuData: MenuItem[] = [
-    // CUSTOMS
-
-    {
-      id: 101,
-      category: "custom",
-      name: { th: "Performance Parts" },
-      price: 10000,
-      img: "https://img1.pic.in.th/images/Screenshot-2026-04-10-215327.png",
-    },
-    {
-      id: 104,
-      category: "custom",
-      name: { th: "Cosmetic Parts" },
-      price: 1000,
-      img: "https://img1.pic.in.th/images/Screenshot-2026-04-06-215058.png",
-    },
-
-    {
-      id: 107,
-      category: "custom",
-      name: { th: "Respray Kit" },
-      price: 2000,
-      img: "https://img2.pic.in.th/Screenshot-2026-04-06-214850.png",
-    },
-
-    {
-      id: 103,
-      category: "custom",
-      name: { th: "Vehicle Wheels Set" },
-      price: 2000,
-      img: "https://img1.pic.in.th/images/Screenshot-2026-04-06-215128.png",
-    },
-
-    {
-      id: 106,
-      category: "custom",
-      name: { th: "Extras_Kit" },
-      price: 1000,
-      img: "https://img1.pic.in.th/images/Screenshot-2026-05-21-011419.png",
-    },
-
-    {
-      id: 102,
-      category: "custom",
-      name: { th: "Stancer Kit" },
-      price: 1000,
-      img: "https://img1.pic.in.th/images/Screenshot-2026-04-10-215441.png",
-    },
-    {
-      id: 108,
-      category: "custom",
-      name: { th: "Carplay" },
-      price: 2000,
-      img: "https://img1.pic.in.th/images/Screenshot-2026-04-12-041049.png",
-    },
-
-    // Core Parts
-    {
-      id: 201,
-      category: "Core Parts",
-      name: { th: "Repair Kit" },
-      price: 300,
-      img: "https://img2.pic.in.th/Screenshot-2026-04-06-212455.png",
-    },
-    {
-      id: 206,
-      category: "Core Parts",
-      name: { th: "Alternator" },
-      price: 600,
-      img: "https://img2.pic.in.th/Screenshot-2026-04-06-212548.png",
-    },
-    {
-      id: 209,
-      category: "Core Parts",
-      name: { th: "Brakes" },
-      price: 600,
-      img: "https://img2.pic.in.th/Screenshot-2026-04-06-212448.png",
-    },
-
-    {
-      id: 202,
-      category: "Core Parts",
-      name: { th: "Fuel Injector" },
-      price: 600,
-      img: "https://img1.pic.in.th/images/Screenshot-2026-04-06-212409.png",
-    },
-
-    {
-      id: 203,
-      category: "Core Parts",
-      name: { th: "Power Steering Pump" },
-      price: 600,
-      img: "https://img2.pic.in.th/Screenshot-2026-04-06-212341.png",
-    },
-
-    {
-      id: 207,
-      category: "Core Parts",
-      name: { th: "Radiator" },
-      price: 600,
-      img: "https://img2.pic.in.th/Screenshot-2026-04-06-212523.png",
-    },
-
-    {
-      id: 208,
-      category: "Core Parts",
-      name: { th: "Transmission" },
-      price: 600,
-      img: "https://img2.pic.in.th/Screenshot-2026-04-06-212507.png",
-    },
-    {
-      id: 205,
-      category: "Core Parts",
-      name: { th: "EV Battery" },
-      price: 600,
-      img: "https://img2.pic.in.th/Screenshot-2026-04-06-212351.png",
-    },
-
-    {
-      id: 204,
-      category: "Core Parts",
-      name: { th: "Electric Motor" },
-      price: 600,
-      img: "https://img1.pic.in.th/images/Screenshot-2026-04-06-212501.png",
-    },
-
-    // Service
-    {
-      id: 312,
-      category: "Service",
-      name: { th: "Air Filter" },
-      price: 400,
-      img: "https://img1.pic.in.th/images/Screenshot-2026-04-06-212553.png",
-    },
-    {
-      id: 310,
-      category: "Service",
-      name: { th: "Brake Fluid" },
-      price: 400,
-      img: "https://img2.pic.in.th/Screenshot-2026-04-06-212538.png",
-    },
-    {
-      id: 305,
-      category: "Service",
-      name: { th: "Brake Pads" },
-      price: 400,
-      img: "https://img2.pic.in.th/Screenshot-2026-04-06-214628.png",
-    },
-    {
-      id: 309,
-      category: "Service",
-      name: { th: "Coolant" },
-      price: 400,
-      img: "https://img2.pic.in.th/Screenshot-2026-04-06-214454.png",
-    },
-    {
-      id: 304,
-      category: "Service",
-      name: { th: "Drive Belt" },
-      price: 400,
-      img: "https://img2.pic.in.th/Screenshot-2026-04-06-214705.png",
-    },
-    {
-      id: 303,
-      category: "Service",
-      name: { th: "Fuel Filter" },
-      price: 400,
-      img: "https://img1.pic.in.th/images/Screenshot-2026-04-10-215321.png",
-    },
-    {
-      id: 302,
-      category: "Service",
-      name: { th: "Oil Filter" },
-      price: 400,
-      img: "https://img2.pic.in.th/Screenshot-2026-04-06-212532.png",
-    },
-    {
-      id: 306,
-      category: "Service",
-      name: { th: "Steering Fluid" },
-      price: 400,
-      img: "https://img2.pic.in.th/Screenshot-2026-04-06-212438.png",
-    },
-    {
-      id: 307,
-      category: "Service",
-      name: { th: "Spark Plugs" },
-      price: 400,
-      img: "https://img1.pic.in.th/images/Screenshot-2026-04-06-214549.png",
-    },
-    {
-      id: 301,
-      category: "Service",
-      name: { th: "Tires" },
-      price: 400,
-      img: "https://img1.pic.in.th/images/Screenshot-2026-04-06-214750.png",
-    },
-    {
-      id: 313,
-      category: "Service",
-      name: { th: "Transmission Fluid" },
-      price: 400,
-      img: "https://img2.pic.in.th/Screenshot-2026-04-06-212558.png",
-    },
-    {
-      id: 311,
-      category: "Service",
-      name: { th: "Battery Coolant" },
-      price: 400,
-      img: "https://img1.pic.in.th/images/Screenshot-2026-04-06-212515.png",
-    },
-    {
-      id: 308,
-      category: "Service",
-      name: { th: "High Voltage Wiring" },
-      price: 400,
-      img: "https://img2.pic.in.th/Screenshot-2026-04-06-212429.png",
-    },
-  ];
-  /* cart */
-
-  const add = (item: any) => {
+  /* Cart Operations */
+  const add = (item: MenuItem) => {
     const current = cart.find((i) => i.id === item.id)?.qty || 0;
-
     const max = stock[item.id] || 0;
 
     if (current >= max) {
@@ -391,15 +180,15 @@ export default function Home() {
       playClickSound();
       return;
     }
+    
     playClickSound();
     setCart((prev) => {
-      const f = prev.find((p) => p.id == item.id);
-
-      if (f)
+      const existing = prev.find((p) => p.id === item.id);
+      if (existing) {
         return prev.map((p) =>
-          p.id == item.id ? { ...p, qty: Math.min(p.qty + 1, 999) } : p
+          p.id === item.id ? { ...p, qty: Math.min(p.qty + 1, max) } : p
         );
-
+      }
       return [...prev, { ...item, qty: 1 }];
     });
   };
@@ -408,62 +197,42 @@ export default function Home() {
     playClickSound();
     setCart((prev) =>
       prev
-
-        .map((p) => (p.id == id ? { ...p, qty: p.qty - 1 } : p))
-
+        .map((p) => (p.id === id ? { ...p, qty: p.qty - 1 } : p))
         .filter((p) => p.qty > 0)
     );
   };
 
   const changeQty = (id: number, val: number) => {
     const max = stock[id] || 0;
+    let targetQty = val;
+    if (targetQty < 1) targetQty = 1;
+    if (targetQty > max) targetQty = max;
 
-    if (val < 1) val = 1;
-
-    if (val > max) val = max;
-
-    setCart((prev) => prev.map((p) => (p.id === id ? { ...p, qty: val } : p)));
+    setCart((prev) => prev.map((p) => (p.id === id ? { ...p, qty: targetQty } : p)));
   };
 
-  /* filter */
-
+  /* Filtered Menu */
   const filtered = menuData
-
     .filter((item) => item.category === category)
+    .filter((item) => item.name.th.toLowerCase().includes(search.toLowerCase()));
 
-    .filter((item) =>
-      item.name.th
+  /* Total Price */
+  const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
 
-        .toLowerCase()
-
-        .includes(search.toLowerCase())
-    );
-
-  /* total */
-
-  const total = cart.reduce(
-    (s, i) => s + i.price * i.qty,
-
-    0
-  );
-
-  /* submit */
-
+  /* Submit Handlers */
   const handleSubmitClick = () => {
-    console.log("handleSubmitClick called, employee:", employee, "cart:", cart.length);
-    if (!employee) {
+    if (!employee || employee === "เลือกผู้เบิก") {
       setPopup("เลือกชื่อผู้เบิก");
       playClickSound();
       return;
     }
 
-    if (cart.length == 0) {
-      setPopup("ไม่มีสินค้า");
+    if (cart.length === 0) {
+      setPopup("ไม่มีสินค้าในรายการ");
       playClickSound();
       return;
     }
 
-    console.log("Setting showConfirm to true");
     playClickSound();
     setShowConfirm(true);
   };
@@ -473,47 +242,37 @@ export default function Home() {
     setShowConfirm(false);
     setSending(true);
 
-    const order = cart.map((i) => `${i.name.th} x ${i.qty}`).join(", ");
+    const orderSummary = cart.map((i) => `${i.name.th} x ${i.qty}`).join(", ");
 
     try {
-      // บันทึกลงฐานข้อมูล
-      const response = await fetch("/api/trpc/requisitions.create", {
+      // 1. บันทึกลงระบบ Backend (tRPC)
+      await fetch("/api/trpc/requisitions.create", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           json: {
             employeeName: employee,
-            items: JSON.stringify(cart.map((i) => ({
-              id: i.id,
-              name: i.name.th,
-              price: i.price,
-              qty: i.qty,
-            }))),
+            items: JSON.stringify(
+              cart.map((i) => ({ id: i.id, name: i.name.th, price: i.price, qty: i.qty }))
+            ),
             totalAmount: total,
             note: note || undefined,
           },
         }),
       });
 
-      // ส่งไปยัง Google Sheets
+      // 2. บันทึกลง Google Sheets
       await fetch(
         "https://script.google.com/macros/s/AKfycbyiDOq89bHfEiip0TZS08RnqBvAn71XKvthICWiUbBMtCB9_TOD85MTVV38Bv7J1PpQUA/exec",
         {
           method: "POST",
           mode: "no-cors",
           body: new URLSearchParams({
-            employee: employee,
-            order: order,
-            note: note,
+            employee,
+            order: orderSummary,
+            note,
             total: total.toString(),
-            cart: JSON.stringify(
-              cart.map((i) => ({
-                id: i.id,
-                qty: i.qty,
-              }))
-            ),
+            cart: JSON.stringify(cart.map((i) => ({ id: i.id, qty: i.qty }))),
           }),
         }
       );
@@ -532,152 +291,64 @@ export default function Home() {
     setShowConfirm(false);
   };
 
-  /* success */
-
-  if (submitted) return <div style={successBox}>เบิกสำเร็จ</div>;
-
-  /* UI */
+  if (submitted) return <div style={successBox}>เบิกสำเร็จเรียบร้อย</div>;
 
   return (
     <div style={page}>
       {loading && (
         <div style={loadingOverlay}>
-          <div className="spinner" style={spinner} />
+          <div style={spinner} />
         </div>
       )}
 
-      {/* Theme Toggle Button */}
-      {switchable && toggleTheme && (
-        <button
-          onClick={toggleTheme}
-          style={{
-            position: 'fixed',
-            top: '20px',
-            right: '20px',
-            zIndex: 1000,
-            padding: '8px 12px',
-            borderRadius: '8px',
-            border: 'none',
-            background: theme === 'dark' ? '#FFD700' : '#333',
-            color: theme === 'dark' ? '#333' : '#FFD700',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            fontSize: '14px',
-            fontWeight: 'bold',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-            transition: 'all 0.3s ease',
-          }}
-          onMouseDown={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.transform = "scale(0.95)";
-          }}
-          onMouseUp={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
-          }}
-          title={theme === 'dark' ? 'โหมดกลางวัน' : 'โหมดกลางคืน'}
-        >
-          {theme === 'dark' ? (
-            <>
-              <Sun size={18} />
-              Light
-            </>
-          ) : (
-            <>
-              <Moon size={18} />
-              Dark
-            </>
-          )}
-        </button>
-      )}
+      {/* Top Bar Navigation Controls */}
+      <div style={{ position: "fixed", top: "20px", right: "20px", zIndex: 1000, display: "flex", gap: "8px" }}>
+        {user?.role === "admin" && (
+          <button
+            onClick={() => setLocation("/admin")}
+            style={actionBtnStyle("#0d47a1")}
+            title="Admin Dashboard"
+          >
+            <Settings size={18} />
+            Admin
+          </button>
+        )}
 
-      {/* History Button */}
-      <button
-        onClick={() => setLocation('/history')}
-        style={{
-          position: 'fixed',
-          top: '20px',
-          right: user?.role === 'admin' ? (switchable && toggleTheme ? '220px' : '120px') : (switchable && toggleTheme ? '120px' : '20px'),
-          zIndex: 1000,
-          padding: '8px 12px',
-          borderRadius: '8px',
-          border: 'none',
-          background: '#e53935',
-          color: '#fff',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px',
-          fontSize: '14px',
-          fontWeight: 'bold',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-          transition: 'all 0.3s ease',
-        }}
-        onMouseDown={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.transform = "scale(0.95)";
-        }}
-        onMouseUp={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
-        }}
-        onMouseLeave={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
-        }}
-        title="ประวัติการเบิก"
-      >
-        📋 ประวัติ
-      </button>
-
-      {/* Admin Button */}
-      {user?.role === 'admin' && (
         <button
-          onClick={() => setLocation('/admin')}
-          style={{
-            position: 'fixed',
-            top: '20px',
-            right: switchable && toggleTheme ? '120px' : '20px',
-            zIndex: 1000,
-            padding: '8px 12px',
-            borderRadius: '8px',
-            border: 'none',
-            background: '#0d47a1',
-            color: '#fff',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            fontSize: '14px',
-            fontWeight: 'bold',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-            transition: 'all 0.3s ease',
-          }}
-          onMouseDown={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.transform = "scale(0.95)";
-          }}
-          onMouseUp={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
-          }}
-          title="Admin Dashboard"
+          onClick={() => setLocation("/history")}
+          style={actionBtnStyle("#e53935")}
+          title="ประวัติการเบิก"
         >
-          <Settings size={18} />
-          Admin
+          📋 ประวัติ
         </button>
-      )}
+
+        {switchable && toggleTheme && (
+          <button
+            onClick={toggleTheme}
+            style={{
+              ...actionBtnStyle(theme === "dark" ? "#FFD700" : "#333"),
+              color: theme === "dark" ? "#333" : "#FFD700",
+            }}
+            title={theme === "dark" ? "โหมดกลางวัน" : "โหมดกลางคืน"}
+          >
+            {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+            {theme === "dark" ? "Light" : "Dark"}
+          </button>
+        )}
+      </div>
 
       <h2 style={title}>𝐕.𝐌.𝐎. 𝐋𝐔𝐂𝐊𝐘 𝐒𝐏𝐄𝐄𝐃 𝐂𝐔𝐒𝐓𝐎𝐌</h2>
-      <h2 style={title}>กดรีเฟรชทุกครั้ง ก่อนกดเบิก</h2>
+      <p style={{ color: "#e53935", fontSize: "14px", fontWeight: "bold", margin: "4px 0 16px" }}>
+        *กดรีเฟรชทุกครั้ง ก่อนกดเบิกสินค้า
+      </p>
+
+      {/* Employee Selector */}
       <select
         value={employee}
         onChange={(e) => setEmployee(e.target.value)}
-        style={input}
+        style={inputStyle}
       >
-        <option>เลือกผู้เบิก</option>
-
+        <option value="">-- เลือกผู้เบิก --</option>
         {employees.map((e) => (
           <option key={e} value={e}>
             {e}
@@ -685,231 +356,145 @@ export default function Home() {
         ))}
       </select>
 
-      <div style={tabs}>
-        <button
-          onClick={() => setCategory("custom")}
-          style={tab(category == "custom")}
-        >
-          Customs
-        </button>
-
-        <button
-          onClick={() => setCategory("Core Parts")}
-          style={tab(category == "Core Parts")}
-        >
-          Core Parts
-        </button>
-
-        <button
-          onClick={() => setCategory("Service")}
-          style={tab(category == "Service")}
-        >
-          Service
-        </button>
-      </div>
-
-      <input
-        placeholder="ค้นหา"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        style={input}
-      />
-
-      <div style={cardContainer}>
-        {filtered.map((item) => (
-          <div key={item.id} style={card}>
-            <img src={item.img} style={img} />
-            <div style={{ marginTop: 8 }}>
-              <div style={{ fontSize: 14, fontWeight: 500 }}>{item.name.th}</div>
-              <div style={{ fontSize: 12, color: "#666", marginTop: 4 }}>{item.price} ฿</div>
-              <div style={{ fontSize: 11, color: "#999", marginTop: 2 }}>เหลือ {stock[item.id] ?? 0} ชิ้น</div>
-              <button
-              onClick={() => add(item)}
-              disabled={(stock[item.id] || 0) === 0}
-              onMouseDown={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.transform = "scale(0.95)";
-              }}
-              onMouseUp={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
-              }}
-              style={{
-                ...addBtn,
-                opacity: (stock[item.id] || 0) === 0 ? 0.5 : 1,
-              }}
-            >
-              {(stock[item.id] || 0) === 0 ? "หมด" : "เพิ่ม"}
-            </button>
-            </div>
-          </div>
+      {/* Category Tabs */}
+      <div style={tabsStyle}>
+        {["custom", "Core Parts", "Service"].map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setCategory(cat)}
+            style={tabStyle(category === cat)}
+          >
+            {cat === "custom" ? "Customs" : cat}
+          </button>
         ))}
       </div>
 
-      <h3>รายการ</h3>
-
-      {cart.map((i) => (
-        <div key={i.id} style={cartRow}>
-          {i.name.th}
-
-          <div>
-            <button 
-              onClick={() => minus(i.id)}
-              onMouseDown={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.transform = "scale(0.95)";
-              }}
-              onMouseUp={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
-              }}
-              style={{
-                ...addBtn,
-                padding: "4px 10px",
-              }}
-            >
-              -
-            </button>
-
-            <input
-              type="number"
-              value={i.qty}
-              min={1}
-              max={999}
-              onChange={(e) =>
-                changeQty(
-                  i.id,
-
-                  Number(e.target.value)
-                )
-              }
-              style={{
-                width: "50px",
-                padding: "4px",
-                marginLeft: "4px",
-                marginRight: "4px",
-                borderRadius: "4px",
-                border: "1px solid #ddd",
-                textAlign: "center",
-              }}
-            />
-
-            <button 
-              onClick={() => add(i)}
-              onMouseDown={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.transform = "scale(0.95)";
-              }}
-              onMouseUp={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
-              }}
-              style={{
-                ...addBtn,
-                padding: "4px 10px",
-              }}
-            >
-              +
-            </button>
-          </div>
-        </div>
-      ))}
-
-      <h2>รวม {total}</h2>
-
-      <textarea
-        placeholder="Note ใส่หรือไม่ใส่ก็ได้"
-        value={note}
-        onChange={(e) => setNote(e.target.value)}
-        style={input}
+      {/* Search Bar */}
+      <input
+        placeholder="🔍 ค้นหาอะไหล่..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        style={inputStyle}
       />
 
-      <button 
-        onClick={handleSubmitClick} 
-        disabled={sending} 
-        onMouseDown={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.transform = "scale(0.95)";
-        }}
-        onMouseUp={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
-        }}
-        onMouseLeave={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
-        }}
-        style={submitBtn}
-      >
-        {sending ? "กำลังส่ง..." : "เบิก"}
+      {/* Menu Cards Container */}
+      <div style={cardContainerStyle}>
+        {filtered.map((item) => {
+          const remStock = stock[item.id] ?? 0;
+          const isOutOfStock = remStock === 0;
+          return (
+            <div key={item.id} style={cardStyle}>
+              <img src={item.img} alt={item.name.th} style={imgStyle} />
+              <div style={{ marginTop: 8, width: "100%" }}>
+                <div style={{ fontSize: 13, fontWeight: 600 }}>{item.name.th}</div>
+                <div style={{ fontSize: 12, color: "#e53935", fontWeight: "bold", marginTop: 2 }}>
+                  {item.price.toLocaleString()} ฿
+                </div>
+                <div style={{ fontSize: 11, color: remStock < 5 ? "#e53935" : "#666", marginTop: 2 }}>
+                  คงเหลือ {remStock} ชิ้น
+                </div>
+                <button
+                  onClick={() => add(item)}
+                  disabled={isOutOfStock}
+                  style={{
+                    ...addBtnStyle,
+                    opacity: isOutOfStock ? 0.4 : 1,
+                    cursor: isOutOfStock ? "not-allowed" : "pointer",
+                  }}
+                >
+                  {isOutOfStock ? "หมด" : "เพิ่ม"}
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <h3 style={{ marginTop: 24, borderBottom: "2px solid #0d47a1", paddingBottom: 6 }}>
+        🛒 รายการเบิกสินค้า
+      </h3>
+
+      {cart.length === 0 ? (
+        <div style={{ color: "#888", textAlign: "center", padding: "20px 0" }}>
+          ยังไม่มีสินค้าในตะกร้า
+        </div>
+      ) : (
+        cart.map((i) => (
+          <div key={i.id} style={cartRowStyle}>
+            <span style={{ fontWeight: 500 }}>{i.name.th}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+              <button onClick={() => minus(i.id)} style={qtyBtnStyle}>
+                -
+              </button>
+              <input
+                type="number"
+                value={i.qty}
+                min={1}
+                max={stock[i.id] || 1}
+                onChange={(e) => changeQty(i.id, Number(e.target.value))}
+                style={qtyInputStyle}
+              />
+              <button onClick={() => add(i)} style={qtyBtnStyle}>
+                +
+              </button>
+            </div>
+          </div>
+        ))
+      )}
+
+      <h2 style={{ textAlign: "right", color: "#0d47a1", marginTop: 16 }}>
+        รวมทั้งหมด: {total.toLocaleString()} ฿
+      </h2>
+
+      <textarea
+        placeholder="หมายเหตุเพิ่มเติม (ถ้ามี)"
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
+        style={{ ...inputStyle, height: "70px", resize: "none" }}
+      />
+
+      <button onClick={handleSubmitClick} disabled={sending} style={submitBtnStyle}>
+        {sending ? "กำลังส่งข้อมูล..." : "ยืนยันการเบิกสินค้า"}
       </button>
 
+      {/* Popups & Dialogs */}
       {popup && (
-        <div style={popupBg}>
-          <div style={popupBox}>{popup}</div>
+        <div style={popupBgStyle}>
+          <div style={popupBoxStyle}>{popup}</div>
         </div>
       )}
 
       {showConfirm && (
-        <div style={{...popupBg, background: "rgba(0,0,0,0.7)"}}>
-          <div style={confirmBox} onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ marginTop: 0, color: "#0d47a1" }}>ยืนยันการเบิก</h3>
-            <p style={{ marginBottom: 20, color: "#333" }}>ผู้เบิก: <strong>{employee}</strong></p>
-            <div style={{ maxHeight: "300px", overflowY: "auto", marginBottom: 20, background: "#f9f9f9", padding: 12, borderRadius: 8 }}>
+        <div style={{ ...popupBgStyle, background: "rgba(0,0,0,0.7)" }}>
+          <div style={confirmBoxStyle} onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ marginTop: 0, color: "#0d47a1" }}>ยืนยันรายการเบิก</h3>
+            <p style={{ marginBottom: 12 }}>
+              ผู้เบิก: <strong>{employee}</strong>
+            </p>
+            <div style={confirmListStyle}>
               {cart.map((i) => (
-                <div key={i.id} style={{ display: "flex", justifyContent: "space-between", padding: 8, borderBottom: "1px solid #e0e0e0", color: "#333" }}>
+                <div key={i.id} style={confirmRowStyle}>
                   <span>{i.name.th}</span>
-                  <span><strong>x{i.qty}</strong> = {i.price * i.qty} ฿</span>
+                  <span>
+                    <strong>x{i.qty}</strong> = {(i.price * i.qty).toLocaleString()} ฿
+                  </span>
                 </div>
               ))}
-              <div style={{ display: "flex", justifyContent: "space-between", padding: 12, fontWeight: "bold", color: "#0d47a1", fontSize: 16 }}>
-                <span>รวมทั้งสิ้น:</span>
-                <span>{total} ฿</span>
+              <div style={confirmTotalStyle}>
+                <span>ยอดรวมสุทธิ:</span>
+                <span>{total.toLocaleString()} ฿</span>
               </div>
             </div>
             {note && (
-              <div style={{ marginBottom: 20, padding: 10, background: "#fff3cd", borderRadius: 8, color: "#333" }}>
+              <div style={noteBoxStyle}>
                 <strong>หมายเหตุ:</strong> {note}
               </div>
             )}
-            <div style={{ display: "flex", gap: 10 }}>
-              <button
-                type="button"
-                onClick={confirmSubmit}
-                onMouseDown={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.transform = "scale(0.95)";
-                }}
-                onMouseUp={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
-                }}
-                style={{
-                  ...confirmBtn,
-                  background: "#0d47a1",
-                  flex: 1,
-                }}
-              >
-                ยืนยัน
+            <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
+              <button onClick={confirmSubmit} style={{ ...dialogBtnStyle, background: "#0d47a1" }}>
+                ยืนยันส่งเบิก
               </button>
-              <button
-                onClick={cancelSubmit}
-                onMouseDown={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.transform = "scale(0.95)";
-                }}
-                onMouseUp={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
-                }}
-                style={{
-                  ...confirmBtn,
-                  background: "#999",
-                  flex: 1,
-                }}
-              >
+              <button onClick={cancelSubmit} style={{ ...dialogBtnStyle, background: "#888" }}>
                 ยกเลิก
               </button>
             </div>
@@ -920,188 +505,246 @@ export default function Home() {
   );
 }
 
-/* style */
+/* ================= Inline Style Definitions ================= */
+
+const page: React.CSSProperties = {
+  maxWidth: "700px",
+  margin: "auto",
+  padding: 16,
+  background: "var(--background, #f9f9f9)",
+  color: "var(--foreground, #333)",
+  fontFamily: "'Poppins', sans-serif",
+  minHeight: "100vh",
+};
+
+const title: React.CSSProperties = {
+  color: "#0d47a1",
+  marginTop: 0,
+  fontSize: "22px",
+  fontWeight: 700,
+};
+
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  marginTop: 8,
+  padding: 10,
+  borderRadius: 8,
+  border: "1px solid #ccc",
+  background: "#fff",
+  color: "#333",
+  boxSizing: "border-box",
+};
+
+const tabsStyle: React.CSSProperties = {
+  display: "flex",
+  gap: 8,
+  marginTop: 12,
+  marginBottom: 4,
+};
+
+const tabStyle = (active: boolean): React.CSSProperties => ({
+  background: active ? "#0d47a1" : "#e0e0e0",
+  color: active ? "#fff" : "#333",
+  border: "none",
+  padding: "8px 16px",
+  borderRadius: 20,
+  cursor: "pointer",
+  fontWeight: active ? 600 : 400,
+  transition: "all 0.2s ease",
+});
+
+const cardContainerStyle: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))",
+  gap: 10,
+  marginTop: 12,
+};
+
+const cardStyle: React.CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  textAlign: "center",
+  background: "#fff",
+  padding: 10,
+  borderRadius: 12,
+  border: "1px solid #e0e0e0",
+  boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+};
+
+const imgStyle: React.CSSProperties = {
+  width: 55,
+  height: 55,
+  borderRadius: 8,
+  objectFit: "cover",
+};
+
+const addBtnStyle: React.CSSProperties = {
+  width: "100%",
+  marginTop: 6,
+  background: "#e53935",
+  color: "#fff",
+  border: "none",
+  padding: "6px 0",
+  borderRadius: 16,
+  fontWeight: 600,
+  fontSize: "12px",
+};
+
+const actionBtnStyle = (bgColor: string): React.CSSProperties => ({
+  padding: "8px 12px",
+  borderRadius: "8px",
+  border: "none",
+  background: bgColor,
+  color: "#fff",
+  cursor: "pointer",
+  display: "flex",
+  alignItems: "center",
+  gap: "6px",
+  fontSize: "13px",
+  fontWeight: "bold",
+  boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+});
+
+const cartRowStyle: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  background: "#fff",
+  padding: "10px 14px",
+  marginTop: 8,
+  borderRadius: 8,
+  border: "1px solid #e0e0e0",
+};
+
+const qtyBtnStyle: React.CSSProperties = {
+  background: "#0d47a1",
+  color: "#fff",
+  border: "none",
+  padding: "4px 10px",
+  borderRadius: 4,
+  cursor: "pointer",
+  fontWeight: "bold",
+};
+
+const qtyInputStyle: React.CSSProperties = {
+  width: "45px",
+  padding: "3px",
+  borderRadius: 4,
+  border: "1px solid #ccc",
+  textAlign: "center",
+};
+
+const submitBtnStyle: React.CSSProperties = {
+  width: "100%",
+  marginTop: 16,
+  padding: 12,
+  background: "#0d47a1",
+  color: "#fff",
+  border: "none",
+  borderRadius: 25,
+  fontSize: 16,
+  fontWeight: 600,
+  cursor: "pointer",
+};
+
 const loadingOverlay: React.CSSProperties = {
   position: "fixed",
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  background: "rgba(255,255,255,0.3)",
+  top: 0, left: 0, right: 0, bottom: 0,
+  background: "rgba(255,255,255,0.4)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   zIndex: 999,
-  pointerEvents: "none",
 };
 
 const spinner: React.CSSProperties = {
-  width: 40,
-  height: 40,
-  border: "4px solid rgba(0,0,0,0.15)",
-  borderTop: "4px solid #1565c0",
+  width: 36,
+  height: 36,
+  border: "4px solid rgba(0,0,0,0.1)",
+  borderTop: "4px solid #0d47a1",
   borderRadius: "50%",
-  animation: "spin 0.5s linear infinite",
-  pointerEvents: "auto",
+  animation: "spin 0.6s linear infinite",
 };
 
-const page = {
-  maxWidth: "100%",
-  margin: "auto",
-  padding: 20,
-  background: "var(--background)",
-  color: "var(--foreground)",
-  fontFamily: "Poppins",
-  transition: "background-color 0.3s ease, color 0.3s ease",
-};
-
-const title = {
-  color: "#0d47a1",
-  marginTop: 0,
-};
-
-const input = {
-  width: "100%",
-  marginTop: 10,
-  padding: 12,
-  borderRadius: 12,
-  border: "1px solid #ddd",
-  background: "#fff",
-  color: "#333",
-};
-
-const tabs = {
-  display: "flex",
-  gap: 10,
-  marginTop: 15,
-};
-
-const tab = (active: boolean) => ({
-  background: active ? "#0d47a1" : "#e8e8e8",
-  color: active ? "#fff" : "#333",
-  border: "none",
-  padding: "8px 14px",
-  borderRadius: 20,
-  cursor: "pointer",
-  fontWeight: active ? "600" : "400",
-});
-
-const cardContainer = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
-  gap: 12,
-  marginTop: 12,
-};
-
-const card = {
-  display: "flex",
-  flexDirection: "column" as const,
-  alignItems: "center",
-  textAlign: "center" as const,
-  background: "#fff",
-  padding: 12,
-  borderRadius: 14,
-  border: "1px solid #e0e0e0",
-  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-  cursor: "pointer",
-  transition: "transform 0.2s ease, box-shadow 0.2s ease",
-};
-
-const img: React.CSSProperties = {
-  width: 60,
-  height: 60,
-  borderRadius: 10,
-  objectFit: "cover",
-};
-
-const addBtn = {
-  background: "#e53935",
-  color: "white",
-  border: "none",
-  padding: "6px 12px",
-  borderRadius: 20,
-  cursor: "pointer",
-  fontWeight: "500",
-  transition: "all 0.1s ease-out",
-  transform: "scale(1)",
-};
-
-const cartRow = {
-  display: "flex",
-  justifyContent: "space-between",
-  background: "#fff",
-  padding: 10,
-  marginTop: 8,
-  borderRadius: 10,
-  border: "1px solid #e0e0e0",
-  color: "#333",
-};
-
-const submitBtn = {
-  width: "100%",
-  marginTop: 15,
-  padding: 14,
-  background: "#0d47a1",
-  color: "white",
-  border: "none",
-  borderRadius: 25,
-  fontSize: 16,
-  transition: "all 0.1s ease-out",
-  transform: "scale(1)",
-  cursor: "pointer",
-};
-
-const popupBg: React.CSSProperties = {
+const popupBgStyle: React.CSSProperties = {
   position: "fixed",
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  background: "rgba(0,0,0,0.5)",
+  top: 0, left: 0, right: 0, bottom: 0,
+  background: "rgba(0,0,0,0.4)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   zIndex: 1000,
 };
 
-const popupBox = {
+const popupBoxStyle: React.CSSProperties = {
   background: "#fff",
-  padding: 25,
-  borderRadius: 15,
+  padding: "16px 28px",
+  borderRadius: 12,
   color: "#333",
-  boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+  fontWeight: "bold",
+  boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
 };
 
-const confirmBox = {
+const confirmBoxStyle: React.CSSProperties = {
   background: "#fff",
-  padding: 25,
-  borderRadius: 15,
+  padding: 20,
+  borderRadius: 12,
   color: "#333",
-  boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-  maxWidth: "500px",
+  maxWidth: "450px",
   width: "90%",
-  zIndex: 1001,
-  position: "relative" as any,
 };
 
-const confirmBtn = {
-  padding: 12,
-  color: "white",
-  border: "none",
+const confirmListStyle: React.CSSProperties = {
+  maxHeight: "220px",
+  overflowY: "auto",
+  background: "#f5f5f5",
+  padding: 10,
   borderRadius: 8,
-  cursor: "pointer",
-  fontWeight: "600",
-  fontSize: 14,
-  transition: "all 0.1s ease-out",
-  transform: "scale(1)",
-} as any;
+};
 
-const successBox = {
+const confirmRowStyle: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  padding: "6px 0",
+  borderBottom: "1px solid #e0e0e0",
+  fontSize: "14px",
+};
+
+const confirmTotalStyle: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  paddingTop: 8,
+  fontWeight: "bold",
+  color: "#0d47a1",
+  fontSize: "15px",
+};
+
+const noteBoxStyle: React.CSSProperties = {
+  marginTop: 10,
+  padding: 8,
+  background: "#fff3cd",
+  borderRadius: 6,
+  fontSize: "13px",
+};
+
+const dialogBtnStyle: React.CSSProperties = {
+  flex: 1,
+  padding: 10,
+  color: "#fff",
+  border: "none",
+  borderRadius: 6,
+  cursor: "pointer",
+  fontWeight: 600,
+};
+
+const successBox: React.CSSProperties = {
   height: "100vh",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  fontSize: 28,
+  fontSize: 24,
+  fontWeight: "bold",
   color: "#0d47a1",
   background: "#f5f5f5",
 };
