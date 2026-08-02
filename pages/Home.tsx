@@ -76,7 +76,7 @@ export default function Home() {
   const [search, setSearch] = useState("");
   
   const [cart, setCart] = useState<CartItem[]>([]);
- const [stock, setStock] = useState<Record<number, number>>({
+  const [stock, setStock] = useState<Record<number, number>>({
     101: 4, 102: 1, 103: 7, 104: 38, 105: 0, 106: 11, 107: 32, 108: 4,
     201: 18, 202: 14, 203: 16, 204: 81, 205: 59, 206: 15, 207: 20, 208: 14, 209: 15,
     301: 19, 302: 353, 303: 20, 304: 13, 305: 13, 306: 21, 307: 18, 308: 59, 309: 14, 310: 13, 311: 63, 312: 482, 313: 19,
@@ -91,37 +91,37 @@ export default function Home() {
   /* Menu Items Data */
   const menuData: MenuItem[] = [
     // CUSTOMS
-    { id: 101, category: "custom", name: { th: "Performance Parts" }, price: 10000, img: "https://media.discordapp.net/attachments/904634942091296788/1529228211165335682/image.png?ex=6a691541&is=6a67c3c1&hm=7d2544f17f77e1f01d90d4a5139565555b73273141e352d258538239eaf83660&=&format=webp&quality=lossless" },
-    { id: 104, category: "custom", name: { th: "Cosmetic Parts" }, price: 1000, img: "https://media.discordapp.net/attachments/904634942091296788/1529228211492225116/image.png?ex=6a691541&is=6a67c3c1&hm=bc5f38b64d1aef91a6b91e2d6411091c2706212a69f7930bc8623104b9d7e463&=&format=webp&quality=lossless" },
-    { id: 107, category: "custom", name: { th: "Respray Kit" }, price: 2000, img: "https://media.discordapp.net/attachments/904634942091296788/1529228211874037980/image.png?ex=6a691541&is=6a67c3c1&hm=2d4cfec5abd63ffd86ef380255a21178eda625cd21e18ea9e81406b1c541d33b&=&format=webp&quality=lossless" },
-    { id: 103, category: "custom", name: { th: "Vehicle Wheels Set" }, price: 2000, img: "https://media.discordapp.net/attachments/904634942091296788/1529228212201062440/image.png?ex=6a691541&is=6a67c3c1&hm=a081a2bed158e9524afee2cef26c376d0d658b5fd576536d82307742e5dd0672&=&format=webp&quality=lossless" },
-    { id: 106, category: "custom", name: { th: "Extras_Kit" }, price: 1000, img: "https://media.discordapp.net/attachments/904634942091296788/1529228212549324840/image.png?ex=6a691541&is=6a67c3c1&hm=835cc8ec52f1fda6835d0a134c4c6449bbe4616dd11ac033d2f13ed249028822&=&format=webp&quality=lossless" },
-    { id: 102, category: "custom", name: { th: "Stancer Kit" }, price: 1000, img: "https://media.discordapp.net/attachments/904634942091296788/1529236474464043128/image.png?ex=6a691cf3&is=6a67cb73&hm=a5bea597396ba89018cb0bcead7969bacb2c7d67aeba5d93f8dcf773fc6215d3&=&format=webp&quality=lossless" },
+    { id: 101, category: "custom", name: { th: "Performance Parts" }, price: 10000, img: "https://i.postimg.cc/1RddG9fz/Performance-Parts.png" },
+    { id: 104, category: "custom", name: { th: "Cosmetic Parts" }, price: 1000, img: "https://i.postimg.cc/QNzzQXHD/Cosmetic-Parts.png" },
+    { id: 107, category: "custom", name: { th: "Respray Kit" }, price: 2000, img: "https://i.postimg.cc/2jttQzVV/Respray-Kit.png" },
+    { id: 103, category: "custom", name: { th: "Vehicle Wheels Set" }, price: 2000, img: "https://i.postimg.cc/rFtPgvrp/Vehicle-Wheels.png" },
+    { id: 106, category: "custom", name: { th: "Extras_Kit" }, price: 1000, img: "https://i.postimg.cc/VshhqYdf/Extras-Kit.png" },
+    { id: 102, category: "custom", name: { th: "Stancer Kit" }, price: 1000, img: "https://i.postimg.cc/tRcc3XYs/Stancer-Kit.png" },
     { id: 108, category: "custom", name: { th: "Carplay" }, price: 2000, img: "https://img1.pic.in.th/images/Screenshot-2026-04-12-041049.png" },
 
     // Core Parts
-    { id: 201, category: "Core Parts", name: { th: "Repair Kit" }, price: 300, img: "https://img2.pic.in.th/Screenshot-2026-04-06-212455.png" },
-    { id: 206, category: "Core Parts", name: { th: "Alternator" }, price: 600, img: "https://img2.pic.in.th/Screenshot-2026-04-06-212548.png" },
-    { id: 209, category: "Core Parts", name: { th: "Brakes" }, price: 600, img: "https://img2.pic.in.th/Screenshot-2026-04-06-212448.png" },
-    { id: 202, category: "Core Parts", name: { th: "Fuel Injector" }, price: 600, img: "https://img1.pic.in.th/images/Screenshot-2026-04-06-212409.png" },
-    { id: 203, category: "Core Parts", name: { th: "Power Steering Pump" }, price: 600, img: "https://img2.pic.in.th/Screenshot-2026-04-06-212341.png" },
-    { id: 207, category: "Core Parts", name: { th: "Radiator" }, price: 600, img: "https://img2.pic.in.th/Screenshot-2026-04-06-212523.png" },
-    { id: 208, category: "Core Parts", name: { th: "Transmission" }, price: 600, img: "https://img1.pic.in.th/images/Transmission.png" },
-    { id: 205, category: "Core Parts", name: { th: "EV Battery" }, price: 600, img: "https://img2.pic.in.th/Screenshot-2026-04-06-212351.png" },
-    { id: 204, category: "Core Parts", name: { th: "Electric Motor" }, price: 600, img: "https://img1.pic.in.th/images/Screenshot-2026-04-06-212501.png" },
+    { id: 201, category: "Core Parts", name: { th: "Repair Kit" }, price: 300, img: "https://i.postimg.cc/2jttQzV3/Repair-Kit.png" },
+    { id: 206, category: "Core Parts", name: { th: "Alternator" }, price: 600, img: "https://i.postimg.cc/WpyyG2hL/Alternator.png" },
+    { id: 209, category: "Core Parts", name: { th: "Brakes" }, price: 600, img: "https://i.postimg.cc/sfLLYVvR/Brakes.png" },
+    { id: 202, category: "Core Parts", name: { th: "Fuel Injector" }, price: 600, img: "https://i.postimg.cc/bY55xzsY/Fuel-Injector.png" },
+    { id: 203, category: "Core Parts", name: { th: "Power Steering Pump" }, price: 600, img: "https://i.postimg.cc/QNzzQXHt/Power-Steering-Pum.png" },
+    { id: 207, category: "Core Parts", name: { th: "Radiator" }, price: 600, img: "https://i.postimg.cc/L4WWtHn5/Radiator.png" },
+    { id: 208, category: "Core Parts", name: { th: "Transmission" }, price: 600, img: "https://i.postimg.cc/BQ1VNdKn/Transmission.png" },
+    { id: 205, category: "Core Parts", name: { th: "EV Battery" }, price: 600, img: "https://i.postimg.cc/h4YYLSfK/EV-Battery.png" },
+    { id: 204, category: "Core Parts", name: { th: "Electric Motor" }, price: 600, img: "https://i.postimg.cc/QNzzQXHh/Electric-Motor.png" },
 
     // Service
-    { id: 312, category: "Service", name: { th: "Air Filter" }, price: 400, img: "https://img1.pic.in.th/images/Screenshot-2026-04-06-212553.png" },
-    { id: 310, category: "Service", name: { th: "Brake Fluid" }, price: 400, img: "https://img2.pic.in.th/Screenshot-2026-04-06-212538.png" },
-    { id: 305, category: "Service", name: { th: "Brake Pads" }, price: 400, img: "https://img2.pic.in.th/Screenshot-2026-04-06-214628.png" },
-    { id: 309, category: "Service", name: { th: "Coolant" }, price: 400, img: "https://img2.pic.in.th/Screenshot-2026-04-06-214454.png" },
-    { id: 304, category: "Service", name: { th: "Drive Belt" }, price: 400, img: "https://img2.pic.in.th/Screenshot-2026-04-06-214705.png" },
-    { id: 303, category: "Service", name: { th: "Fuel Filter" }, price: 400, img: "https://img1.pic.in.th/images/Screenshot-2026-04-10-215321.png" },
-    { id: 302, category: "Service", name: { th: "Oil Filter" }, price: 400, img: "https://img2.pic.in.th/Screenshot-2026-04-06-212532.png" },
-    { id: 306, category: "Service", name: { th: "Steering Fluid" }, price: 400, img: "https://img1.pic.in.th/images/Steering_Fluid.png" },
-    { id: 307, category: "Service", name: { th: "Spark Plugs" }, price: 400, img: "https://img1.pic.in.th/images/Screenshot-2026-04-06-214549.png" },
-    { id: 301, category: "Service", name: { th: "Tires" }, price: 400, img: "https://img1.pic.in.th/images/Tires.png" },
-    { id: 313, category: "Service", name: { th: "Transmission Fluid" }, price: 400, img: "https://img1.pic.in.th/images/Transmission_Fluid.png" },
+    { id: 312, category: "Service", name: { th: "Air Filter" }, price: 400, img: "https://i.postimg.cc/sfLLYV1k/Air-Filter.png" },
+    { id: 310, category: "Service", name: { th: "Brake Fluid" }, price: 400, img: "https://i.postimg.cc/xjZZv0cr/Brake-Fluid.png" },
+    { id: 305, category: "Service", name: { th: "Brake Pads" }, price: 400, img: "https://i.postimg.cc/Pf77WtPn/Brake-Pads.png" },
+    { id: 309, category: "Service", name: { th: "Coolant" }, price: 400, img: "https://i.postimg.cc/bY55xzsh/Coolant.png" },
+    { id: 304, category: "Service", name: { th: "Drive Belt" }, price: 400, img: "https://i.postimg.cc/tRcc3XYy/Drive-Belt.png" },
+    { id: 303, category: "Service", name: { th: "Fuel Filter" }, price: 400, img: "https://i.postimg.cc/bY55xzsz/Fuel-Filter.png" },
+    { id: 302, category: "Service", name: { th: "Oil Filter" }, price: 400, img: "https://i.postimg.cc/0544Y8b2/Oil-Filter.png" },
+    { id: 306, category: "Service", name: { th: "Steering Fluid" }, price: 400, img: "https://i.postimg.cc/kMHHQnBt/Steering-Fluid.png" },
+    { id: 307, category: "Service", name: { th: "Spark Plugs" }, price: 400, img: "https://i.postimg.cc/G3ffFcHB/Spark-Plugs.png" },
+    { id: 301, category: "Service", name: { th: "Tires" }, price: 400, img: "https://i.postimg.cc/ryHH18Kr/Tires.png" },
+    { id: 313, category: "Service", name: { th: "Transmission Fluid" }, price: 400, img: "https://i.postimg.cc/xTb4gWzT/Transmission-Fluid.png" },
     { id: 311, category: "Service", name: { th: "Battery Coolant" }, price: 400, img: "https://img1.pic.in.th/images/Screenshot-2026-04-06-212515.png" },
     { id: 308, category: "Service", name: { th: "High Voltage Wiring" }, price: 400, img: "https://img2.pic.in.th/Screenshot-2026-04-06-212429.png" },
   ];
